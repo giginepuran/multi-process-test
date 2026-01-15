@@ -1,0 +1,64 @@
+# -----------------------------
+# Maven build output
+# -----------------------------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# -----------------------------
+# Java
+# -----------------------------
+*.class
+*.log
+*.jar
+*.war
+*.ear
+
+# -----------------------------
+# IDEs
+# -----------------------------
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# -----------------------------
+# OS-specific
+# -----------------------------
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# -----------------------------
+# Other common ignores
+# -----------------------------
+*.swp
+*.swo
+*.bak
+*.tmp
