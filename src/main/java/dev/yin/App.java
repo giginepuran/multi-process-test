@@ -18,7 +18,7 @@ public class App
             1000, 
             childProcessCount, 
             threadCount, 
-            1000);
+            10);
 
         // start the parent logic
         parent.start();

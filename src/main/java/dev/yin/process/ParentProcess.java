@@ -35,37 +35,40 @@ public class ParentProcess {
             startChild(i);
         }
         broadcastCommand(Command.START);
+        startCountScheduler();
+        /*
         try { Thread.sleep(3000); } catch (InterruptedException e) {}
         broadcastCommand(Command.COUNT);
         try { Thread.sleep(3000); } catch (InterruptedException e) {}
         broadcastCommand(Command.STOP);
+        */
     }
 
-    private void startChild(int childId) {
+    private void startChild(int childNo) {
         try {
             String cp = getCurrentClasspath();
             ProcessBuilder pb = new ProcessBuilder(
                 "java",
                 "-cp", cp, // classpath
                 "dev.yin.process.ChildProcess",
-                String.valueOf(childId),
+                String.valueOf(childNo),
                 String.valueOf(countIntervalMs),
                 String.valueOf(this.threadCount),
                 String.valueOf(this.threadGenerateIntervalsMs)
             );
 
             Process child = pb.start();
-            this.children[childId] = child;
+            this.children[childNo] = child;
             // Parent → Child (stdin)
-            childWriters[childId] = new PrintWriter(child.getOutputStream(), true);
+            childWriters[childNo] = new PrintWriter(child.getOutputStream(), true);
 
             // Child (stdout) → Parent 
-            childReaders[childId] = new BufferedReader(
+            childReaders[childNo] = new BufferedReader(
                 new InputStreamReader(child.getInputStream())
             );
 
             // Start a thread to read child's stdout
-            startChildReaderThread(childId);
+            startChildReaderThread(childNo);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,13 +81,12 @@ public class ParentProcess {
         }
     }
 
-
-    private void startChildReaderThread(int childId) {
+    private void startChildReaderThread(int childNo) {
         new Thread(() -> {
             try {
                 String line;
-                while ((line = childReaders[childId].readLine()) != null) {
-                    System.out.println("[Parent] " + line);
+                while ((line = childReaders[childNo].readLine()) != null) {
+                    System.out.println(line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -92,7 +94,19 @@ public class ParentProcess {
         }).start();
     }
 
+    private void startCountScheduler() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(countIntervalMs);
+                } catch (InterruptedException e) {
+                    return; // exit scheduler
+                }
 
+                broadcastCommand(Command.COUNT);
+            }
+        }).start();
+    }
 
     private String getCurrentClasspath() {
         String classpath = ParentProcess.class

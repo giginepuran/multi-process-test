@@ -3,9 +3,13 @@ package dev.yin.process;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import dev.yin.lib.LogMessage;
 import dev.yin.lib.Command;
+import dev.yin.lib.CountMessage;
 import dev.yin.lib.RingBuffer;
 import dev.yin.thread.GeneratorThread;
 
@@ -52,7 +56,7 @@ public class ChildProcess {
                             break;
 
                         case COUNT:
-                            System.out.println(new LogMessage(processNo, "Received COUNT").toJson());
+                            //System.out.println(new LogMessage(processNo, "Received COUNT").toJson());
                             for (int i = 0; i < threadCount; i++, nextThreadNo++)
                                 startCounterThread(nextThreadNo, buffers[i]);
                             break;
@@ -82,13 +86,16 @@ public class ChildProcess {
 
     private void startCounterThread(int no, RingBuffer<Integer> buffer) {
         new Thread(() -> {
-            System.out.println(new LogMessage(processNo, no, "Hello, counter thread.").toJson());
-            /* TODO: write counted result to stdout
-            var data = buffer.flush();
-            for (Object item : data) {
-                System.out.println("");
+            List<Integer> numbers = buffer.flush();
+            Map<Integer, Integer> counter = new HashMap<>();
+
+            for (int v : numbers) {
+                counter.merge(v, 1, Integer::sum);
             }
-             */
+
+            CountMessage msg = new CountMessage(processNo, counter);
+            //System.out.println(msg.toJson());
+            System.out.println(msg.toIpc());
         }).start();
     }
 

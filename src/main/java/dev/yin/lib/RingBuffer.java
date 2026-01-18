@@ -67,17 +67,18 @@ public class RingBuffer<T> implements Buffer<T> {
      * @param value the value to write
      */
     @Override
-    public void write(T value) {
+    public boolean write(T value) {
         long ri = this.readIndex;
         long wi = this.writeIndex;
 
         // Buffer full → drop new data
         if (wi - ri >= buffer.length) {
-            return;
+            return false;
         }
 
         buffer[(int) (wi & mask)] = value;
         writeIndex = wi + 1;
+        return true;
     }
 
     /**
