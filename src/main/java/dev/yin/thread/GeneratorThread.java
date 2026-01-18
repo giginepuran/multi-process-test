@@ -1,18 +1,27 @@
 package dev.yin.thread;
 
-public class GeneratorThread implements Runnable {
-    private final int generatorId;
-    private final int generateIntervalMs;
-    private final int childId;
+import dev.yin.lib.LogMessage;
+import dev.yin.lib.RingBuffer;
 
-    public GeneratorThread(int childId, int generatorId, int generateIntervalMs) {
-        this.childId = childId;
-        this.generatorId = generatorId;
+public class GeneratorThread implements Runnable {
+    private final int processNo;
+    private final int threadNo;
+    private final int generateIntervalMs;
+    private final RingBuffer<?> buffer;
+
+    public GeneratorThread(int threadNo, int generateIntervalMs, RingBuffer<?> buffer) {
+        this(0, threadNo, generateIntervalMs, buffer);
+    }
+
+    public GeneratorThread(int processNo, int threadNo, int generateIntervalMs, RingBuffer<?> buffer) {
+        this.processNo = processNo;
+        this.threadNo = threadNo;
         this.generateIntervalMs = generateIntervalMs;
+        this.buffer = buffer;
     }
 
     @Override
     public void run() {
-        System.out.println("Hello World! From GeneratorThread" + generatorId);
+        System.out.println(new LogMessage(processNo, threadNo, "Hello, generator thread.").toJson());
     }
 }

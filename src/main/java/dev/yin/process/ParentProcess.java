@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import dev.yin.lib.Command;
+
 public class ParentProcess {
     private final int countIntervalMs;
     private final int childProcessCount;
     private final int threadCount;
-    private final int generateIntervalsMs;
+    private final int threadGenerateIntervalsMs;
     private Process[] children;
     private PrintWriter[] childWriters;
     private BufferedReader[] childReaders;
@@ -33,12 +35,10 @@ public class ParentProcess {
             startChild(i);
         }
         broadcastCommand(Command.START);
-        try {
-            Thread.sleep(3000); // sleep for 3 seconds
-        } catch (InterruptedException e) {}
+        try { Thread.sleep(3000); } catch (InterruptedException e) {}
+        broadcastCommand(Command.COUNT);
+        try { Thread.sleep(3000); } catch (InterruptedException e) {}
         broadcastCommand(Command.STOP);
-
-        
     }
 
     private void startChild(int childId) {
@@ -49,6 +49,7 @@ public class ParentProcess {
                 "-cp", cp, // classpath
                 "dev.yin.process.ChildProcess",
                 String.valueOf(childId),
+                String.valueOf(countIntervalMs),
                 String.valueOf(this.threadCount),
                 String.valueOf(this.threadGenerateIntervalsMs)
             );
@@ -58,7 +59,7 @@ public class ParentProcess {
             // Parent → Child (stdin)
             childWriters[childId] = new PrintWriter(child.getOutputStream(), true);
 
-            // Child → Parent (stdout)
+            // Child (stdout) → Parent 
             childReaders[childId] = new BufferedReader(
                 new InputStreamReader(child.getInputStream())
             );
@@ -83,7 +84,7 @@ public class ParentProcess {
             try {
                 String line;
                 while ((line = childReaders[childId].readLine()) != null) {
-                    System.out.println("[Parent] Child " + childId + " says: " + line);
+                    System.out.println("[Parent] " + line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

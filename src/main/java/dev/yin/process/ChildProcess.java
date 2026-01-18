@@ -4,64 +4,107 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import dev.yin.lib.LogMessage;
+import dev.yin.lib.Command;
+import dev.yin.lib.RingBuffer;
 import dev.yin.thread.GeneratorThread;
 
 public class ChildProcess {
-
-    private final int childId;
+    private final int processNo;
     private final int threadCount;
     private final int threadGenerateIntervalsMs;
+    private RingBuffer<Integer>[] buffers;
 
-    public ChildProcess(int childId, int threadCount, int threadGenerateIntervalsMs) {
-        this.childId = childId;
+    public ChildProcess(int processNo, int parentCountIntervalMs, int threadCount, int threadGenerateIntervalsMs) {
+        this.processNo = processNo;
         this.threadCount = threadCount;
         this.threadGenerateIntervalsMs = threadGenerateIntervalsMs;
+
+        @SuppressWarnings("unchecked")
+        RingBuffer<Integer>[] tmp = (RingBuffer<Integer>[]) new RingBuffer<?>[threadCount];
+        this.buffers = tmp;
+
+        int bufferSize = computeBufferSize(parentCountIntervalMs, threadGenerateIntervalsMs);
+        for (int i = 0; i < threadCount; i++) {
+            buffers[i] = new RingBuffer<>(bufferSize);
+        }
     }
 
     public void start() {
-        startGeneratorThreads();
         startStdinListener();
-    }
 
-    private void startGeneratorThreads() {
-        for (int i = 0; i < threadCount; i++) {
-            Thread t = new Thread(new GeneratorThread(this.childId, i, this.threadGenerateIntervalsMs));
-            t.start();
-        }
+        
     }
 
     private void startStdinListener() {
         new Thread(() -> { // Create Runnable by lambda expression (anonymous function)
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             String event;
+            int nextThreadNo = 0;
             try {
                 while ((event = in.readLine()) != null) {
                     Command cmd = Command.fromString(event);
                     switch (cmd) {
                         case START:
-                            System.out.println("Child " + childId + " received START");
+                            System.out.println(new LogMessage(processNo, "Received START").toJson());
+                            for (int i = 0; i < threadCount; i++, nextThreadNo++)
+                                startGeneratorThread(nextThreadNo, threadGenerateIntervalsMs, buffers[i]);
+                            break;
+
+                        case COUNT:
+                            System.out.println(new LogMessage(processNo, "Received COUNT").toJson());
+                            for (int i = 0; i < threadCount; i++, nextThreadNo++)
+                                startCounterThread(nextThreadNo, buffers[i]);
                             break;
                     
                         case STOP:
-                            System.out.println("Child " + childId + " received STOP");
+                            System.out.println(new LogMessage(processNo, "Received STOP").toJson());
+                            System.exit(0);
                             return;
 
                         default:
                             break;
                     }
                 }
+
+                // stdin closed => parent died. Exit this process.
+                System.exit(0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
+    private void startGeneratorThread(int no, int genIntervalMs, RingBuffer<Integer> buffer) {
+        Thread t = new Thread(new GeneratorThread(no, genIntervalMs, buffer));
+        t.start();
+    }
+
+    private void startCounterThread(int no, RingBuffer<Integer> buffer) {
+        new Thread(() -> {
+            System.out.println(new LogMessage(processNo, no, "Hello, counter thread.").toJson());
+            /* TODO: write counted result to stdout
+            var data = buffer.flush();
+            for (Object item : data) {
+                System.out.println("");
+            }
+             */
+        }).start();
+    }
+
+    private static int computeBufferSize(int readIntervalMs, int generateIntervalMs) {
+        int itemsPerInterval = readIntervalMs / generateIntervalMs;
+        int safety = itemsPerInterval * 4; // 4x safety margin
+        return safety;
+    }
+
     public static void main(String[] args) {
         int childId = Integer.parseInt(args[0]);
-        int threadCount = Integer.parseInt(args[1]);
-        int intervalMs = Integer.parseInt(args[2]);
+        int parentCountintervalMs = Integer.parseInt(args[1]);
+        int threadCount = Integer.parseInt(args[2]);
+        int intervalMs = Integer.parseInt(args[3]);
 
-        ChildProcess cp = new ChildProcess(childId, threadCount, intervalMs);
+        ChildProcess cp = new ChildProcess(childId, parentCountintervalMs, threadCount, intervalMs);
         cp.start();
     }
 }
