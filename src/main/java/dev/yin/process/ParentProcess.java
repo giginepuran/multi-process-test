@@ -53,7 +53,7 @@ public class ParentProcess {
             shutdownChildren();
         }));
 
-        // spawn M child processes
+        // spawn N child processes
         children = new Process[childProcessCount];
         childWriters = new PrintWriter[childProcessCount];
         childReaders = new BufferedReader[childProcessCount];
