@@ -57,7 +57,7 @@ mvn -Prelease exec:java -Dexec.args="N M"
 
 # Using Java
 mkdir bin
-javac -d bin src/main/java/dev/yin/lib/*.java src/main/java/dev/yin/process/*.java src/main/java/dev/yin/App.java
+javac -encoding UTF-8 -d bin src/main/java/dev/yin/lib/*.java src/main/java/dev/yin/process/*.java src/main/java/dev/yin/App.java
 java -cp bin dev.yin.App N M
 ```
 
@@ -68,8 +68,8 @@ mvn -Pdebug exec:java -Dexec.args="N M"
 
 # Using Java
 mkdir bin
-javac -d bin src/main/java/dev/yin/lib/*.java src/main/java/dev/yin/process/*.java src/main/java/dev/yin/App.java
-java -Ddebug.mode=true -cp bin dev.yin.App N M
+javac -encoding UTF-8 -d bin src/main/java/dev/yin/lib/*.java src/main/java/dev/yin/process/*.java src/main/java/dev/yin/App.java
+java -Ddebug.mode=true -cp bin dev.yin.App N M # Notice: this command cannot work on Windows powershell
 ```
 
 
