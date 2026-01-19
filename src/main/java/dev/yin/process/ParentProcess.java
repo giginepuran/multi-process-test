@@ -53,6 +53,7 @@ public class ParentProcess {
             shutdownChildren();
         }));
 
+        readyMsgCount.set(0);
         // spawn N child processes
         children = new Process[childProcessCount];
         childWriters = new PrintWriter[childProcessCount];
@@ -60,7 +61,7 @@ public class ParentProcess {
         for (int i = 0; i < childProcessCount; i++) {
             startChild(i);
         }
-        readyMsgCount.set(0);
+        
         waitUntil(readyLock, () -> readyMsgCount.get() >= childProcessCount);
         broadcastCommand(Command.START);
         startCountScheduler();
