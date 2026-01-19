@@ -20,8 +20,8 @@ participant TC as Temporary Counter Threads (1..M)
 
 Note over P, C: IPC via Stdin/Stdout
 P->>C: Spawns N Processes
-Note over P, P: Wait all MESSAGE|READY arrived
 C-->>P: MESSAGE|READY
+Note over P, P: Wait all MESSAGE|READY arrived
 P->>C: COMMAND|START
 C->>T: Spawns M Threads
 
